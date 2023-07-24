@@ -1,19 +1,34 @@
 ﻿using ChessChallenge.API;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 public class MyBot : IChessBot
 {
     // Piece values: null, pawn, knight, bishop, rook, queen, king
     int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000 };
     Random rng = new();
+    // ulong hashSize = 256 * 256 * 256 - 1;
+    Dictionary<ulong, int> maxHash = new();
+    Dictionary<ulong, int> minHash = new();
+    int nodes = 0;
+    int coll = 0;
 
     public Move Think(Board board, Timer timer)
     {
         int score = 0;
+        nodes = 0;
+        coll = 0;
 
         Move[] moves = GetMoves(board);
         Move retMove = moves[0];
+
+        maxHash.Clear();
+        minHash.Clear();
+        // if (maxHash == null) maxHash = new int[hashSize];
+        // if (minHash == null) minHash = new int[hashSize];
+        // Array.Clear(maxHash, 0, maxHash.Length);
+        // Array.Clear(minHash, 0, minHash.Length);
 
         foreach (Move move in moves)
         {
@@ -26,7 +41,7 @@ public class MyBot : IChessBot
                 retMove = move;
             }
         }
-        Console.WriteLine(score);
+        Console.WriteLine("Score: {0} Nodes: {1}, Coll: {2}", score, nodes, coll);
         return retMove;
     }
 
@@ -51,12 +66,17 @@ public class MyBot : IChessBot
 
     int AlphaBetaMax(Board board, int alpha, int beta, int depth_left)
     {
+        nodes++;
         if (depth_left == 0) return Evaluate(board);
         Move[] moves = board.GetLegalMoves();
         foreach (Move move in moves)
         {
             board.MakeMove(move);
-            int score = AlphaBetaMin(board, alpha, beta, depth_left - 1);
+            int score = maxHash.ContainsKey(board.ZobristKey)
+                ? maxHash[board.ZobristKey]
+                : AlphaBetaMin(board, alpha, beta, depth_left - 1);
+            maxHash[board.ZobristKey] = score;
+            // int score = AlphaBetaMin(board, alpha, beta, depth_left - 1);
             board.UndoMove(move);
             if (score >= beta) return beta;
             if (score > alpha) alpha = score;
@@ -66,12 +86,18 @@ public class MyBot : IChessBot
 
     int AlphaBetaMin(Board board, int alpha, int beta, int depth_left)
     {
+        nodes++;
         if (depth_left == 0) return -Evaluate(board);
         Move[] moves = board.GetLegalMoves();
         foreach (Move move in moves)
         {
             board.MakeMove(move);
-            int score = AlphaBetaMax(board, alpha, beta, depth_left - 1);
+            int score = minHash.ContainsKey(board.ZobristKey)
+                ? minHash[board.ZobristKey]
+                : AlphaBetaMax(board, alpha, beta, depth_left - 1);
+            maxHash[board.ZobristKey] = score;
+            // int score = AlphaBetaMax(board, alpha, beta, depth_left - 1);
+
             board.UndoMove(move);
             if (score <= alpha) return alpha;
             if (score < beta) beta = score;
