@@ -8,12 +8,14 @@ public class Zorbist : IChessBot
     // Piece values: null, pawn, knight, bishop, rook, queen, king
     int[] pieceValues = { 0, 100, 320, 330, 500, 900, 20000 };
     int nodes = 0;
+    int nodeLimit = 10_000_000;
     Random rng = new();
     Dictionary<ulong, int> abTable = new();
 
     public Move Think(Board board, Timer timer)
     {
         nodes = 0;
+        nodeLimit = 10_000_000 + board.PlyCount * 1_000_000;
         abTable.Clear();
         int bestScore = -int.MaxValue;
 
@@ -48,6 +50,7 @@ public class Zorbist : IChessBot
     {
         nodes++;
         int stand_pat = Evaluate(board);
+        // if (nodes > nodeLimit) return stand_pat;
         if (stand_pat >= beta)
             return beta;
         if (alpha < stand_pat)
@@ -84,7 +87,7 @@ public class Zorbist : IChessBot
     int AlphaBeta(Board board, int alpha, int beta, int depthLeft)
     {
         nodes++;
-        if (depthLeft == 0) return Quiesce(board, alpha, beta);
+        if (depthLeft == 0 || nodes > nodeLimit) return Quiesce(board, alpha, beta);
         foreach (Move move in board.GetLegalMoves())
         {
             board.MakeMove(move);
