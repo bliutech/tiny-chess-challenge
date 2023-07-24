@@ -3,21 +3,33 @@ using ChessChallenge.Application;
 
 public class MyBot : IChessBot
 {
-    public Move Think(Board board, Timer timer)
-    {
-        string bot = "MinMax";
+    private IChessBot bot;
 
-        switch (bot)
+    public MyBot()
+    {
+        string bott = "Zorb";
+        string file = "";
+
+        switch (bott)
         {
             case "Quiesce":
-                ChallengeController.tokenCount = ChallengeController.GetTokenCount("AlphaBetaQuiesce.cs");
-                AlphaBetaQuiesce abq = new();
-                return abq.Think(board, timer);
-            case "MinMax":
+                file = "AlphaBetaQuiesce.cs";
+                bot = new AlphaBetaQuiesce();
+                break;
+            case "Zorb":
+                file = "Zorbist.cs";
+                bot = new Zorbist();
+                break;
             default:
-                ChallengeController.tokenCount = ChallengeController.GetTokenCount("AlphaBetaMinMax.cs");
-                AlphaBetaMinMax abmm = new();
-                return abmm.Think(board, timer);
+                file = "AlphaBetaMinMax.cs";
+                bot = new AlphaBetaMinMax();
+                break;
         }
+        ChallengeController.tokenCount = ChallengeController.GetTokenCount(file);
+    }
+
+    public Move Think(Board board, Timer timer)
+    {
+        return bot.Think(board, timer);
     }
 }
