@@ -28,7 +28,7 @@ namespace ChessChallenge.Application
         bool isPlaying;
         Board board;
         public ChessPlayer PlayerWhite { get; private set; }
-        public ChessPlayer PlayerBlack {get;private set;}
+        public ChessPlayer PlayerBlack { get; private set; }
 
         float lastMoveMadeTime;
         bool isWaitingToPlayMove;
@@ -40,7 +40,7 @@ namespace ChessChallenge.Application
         readonly string[] botMatchStartFens;
         int botMatchGameIndex;
         public BotMatchStats BotStatsA { get; private set; }
-        public BotMatchStats BotStatsB {get;private set;}
+        public BotMatchStats BotStatsB { get; private set; }
         bool botAPlaysWhite;
 
 
@@ -52,7 +52,7 @@ namespace ChessChallenge.Application
         // Other
         readonly BoardUI boardUI;
         readonly MoveGenerator moveGenerator;
-        readonly int tokenCount;
+        public static int tokenCount;
         readonly StringBuilder pgns;
 
         public ChallengeController()
@@ -215,9 +215,9 @@ namespace ChessChallenge.Application
             };
         }
 
-        static int GetTokenCount()
+        public static int GetTokenCount(string file = "MyBot.cs")
         {
-            string path = Path.Combine(Directory.GetCurrentDirectory(), "src", "My Bot", "MyBot.cs");
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "src", "My Bot", file);
 
             using StreamReader reader = new(path);
             string txt = reader.ReadToEnd();
