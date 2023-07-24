@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class Zorbist : IChessBot
 {
     // Piece values: null, pawn, knight, bishop, rook, queen, king
-    int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000 };
+    int[] pieceValues = { 0, 100, 320, 330, 500, 900, 20000 };
     int nodes = 0;
     Random rng = new();
     Dictionary<ulong, int> abTable = new();
