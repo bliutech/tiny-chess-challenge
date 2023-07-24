@@ -1,15 +1,21 @@
 ﻿using ChessChallenge.API;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 public class MyBot : IChessBot
 {
     // Piece values: null, pawn, knight, bishop, rook, queen, king
     int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000 };
+    int nodes = 0;
     Random rng = new();
+    Dictionary<ulong, int> abTable = new();
 
     public Move Think(Board board, Timer timer)
     {
+        nodes = 0;
+        abTable.Clear();
+
         int bestScore = -int.MaxValue;
         
         Move[] moves = GetMoves(board);
@@ -27,6 +33,9 @@ public class MyBot : IChessBot
                 bestMove = move;
             }
         }
+
+        Console.WriteLine("Nodes: {0}", nodes);
+
         return bestMove;
     }
 
@@ -37,6 +46,7 @@ public class MyBot : IChessBot
 
     int Quiesce(Board board, int alpha, int beta)
     {
+        nodes++;
         int stand_pat = Evaluate(board);
         if( stand_pat >= beta )
             return beta;
@@ -73,11 +83,15 @@ public class MyBot : IChessBot
 
     int AlphaBeta(Board board, int alpha, int beta, int depthLeft)
     {
+        nodes++;
         if (depthLeft == 0) return Quiesce(board, alpha, beta);
         foreach (Move move in board.GetLegalMoves())
         {
             board.MakeMove(move);
-            int score = -AlphaBeta(board, -beta, -alpha, depthLeft - 1);
+            int score = abTable.ContainsKey(board.ZobristKey)
+                ? abTable[board.ZobristKey]
+                : -AlphaBeta(board, -beta, -alpha, depthLeft - 1);
+            abTable[board.ZobristKey] = score;
             board.UndoMove(move);
             if (score >= beta)
                 return beta;
