@@ -22,6 +22,7 @@ public class Zorbist : IChessBot
 
         foreach (Move move in moves)
         {
+            if (timer.MillisecondsElapsedThisTurn * 20 > timer.MillisecondsRemaining || timer.MillisecondsRemaining < 1000) break;
             board.MakeMove(move);
             int score = -AlphaBeta(board, -int.MaxValue, int.MaxValue, 3);
             board.UndoMove(move);
@@ -40,7 +41,7 @@ public class Zorbist : IChessBot
 
     Move[] GetMoves(Board board)
     {
-        return board.GetLegalMoves().OrderBy(x => rng.Next()).ToArray();
+        return board.GetLegalMoves().OrderBy(x => pieceValues[(int) x.CapturePieceType] + rng.Next(100)).ToArray();
     }
 
     int Quiesce(Board board, int alpha, int beta)
