@@ -10,29 +10,51 @@ public class MyBot : IChessBot
 
     public Move Think(Board board, Timer timer)
     {
-        int score = 0;
-
+        int bestScore = -int.MaxValue;
+        
         Move[] moves = GetMoves(board);
-        Move retMove = moves[0];
+        Move bestMove = moves[0];
 
         foreach (Move move in moves)
         {
             board.MakeMove(move);
-            int newScore = AlphaBetaMax(board, int.MinValue, int.MaxValue, 4);
+            int score = -AlphaBeta(board, -int.MaxValue, int.MaxValue, 3);
             board.UndoMove(move);
-            if (newScore < score)
+            
+            if (score > bestScore)
             {
-                score = newScore;
-                retMove = move;
+                bestScore = score;
+                bestMove = move;
             }
         }
-        Console.WriteLine(score);
-        return retMove;
+        return bestMove;
     }
 
     Move[] GetMoves(Board board)
     {
         return board.GetLegalMoves().OrderBy(x => rng.Next()).ToArray();
+    }
+
+    int Quiesce(Board board, int alpha, int beta)
+    {
+        int stand_pat = Evaluate(board);
+        if( stand_pat >= beta )
+            return beta;
+        if( alpha < stand_pat )
+            alpha = stand_pat;
+
+        foreach (Move move in board.GetLegalMoves(true))
+        {
+            board.MakeMove(move);
+            int score = -Quiesce( board, -beta, -alpha );
+            board.UndoMove(move);
+
+            if( score >= beta )
+                return beta;
+            if( score > alpha )
+               alpha = score;
+        }
+        return alpha;
     }
 
     int Evaluate(Board board)
@@ -49,34 +71,50 @@ public class MyBot : IChessBot
         return score * (board.IsWhiteToMove ? 1 : -1);
     }
 
-    int AlphaBetaMax(Board board, int alpha, int beta, int depth_left)
+    int AlphaBeta(Board board, int alpha, int beta, int depthLeft)
     {
-        if (depth_left == 0) return Evaluate(board);
-        Move[] moves = board.GetLegalMoves();
-        foreach (Move move in moves)
+        if (depthLeft == 0) return Quiesce(board, alpha, beta);
+        foreach (Move move in board.GetLegalMoves())
         {
             board.MakeMove(move);
-            int score = AlphaBetaMin(board, alpha, beta, depth_left - 1);
+            int score = -AlphaBeta(board, -beta, -alpha, depthLeft - 1);
             board.UndoMove(move);
-            if (score >= beta) return beta;
-            if (score > alpha) alpha = score;
+            if (score >= beta)
+                return beta;
+            if (score > alpha)
+                alpha = score;
         }
         return alpha;
     }
 
-    int AlphaBetaMin(Board board, int alpha, int beta, int depth_left)
-    {
-        if (depth_left == 0) return -Evaluate(board);
-        Move[] moves = board.GetLegalMoves();
-        foreach (Move move in moves)
-        {
-            board.MakeMove(move);
-            int score = AlphaBetaMax(board, alpha, beta, depth_left - 1);
-            board.UndoMove(move);
-            if (score <= alpha) return alpha;
-            if (score < beta) beta = score;
-        }
-        return beta;
-    }
+    // int AlphaBetaMax(Board board, int alpha, int beta, int depth_left)
+    // {
+    //     if (depth_left == 0) return Evaluate(board);
+    //     Move[] moves = board.GetLegalMoves();
+    //     foreach (Move move in moves)
+    //     {
+    //         board.MakeMove(move);
+    //         int score = AlphaBetaMin(board, alpha, beta, depth_left - 1);
+    //         board.UndoMove(move);
+    //         if (score >= beta) return beta;
+    //         if (score > alpha) alpha = score;
+    //     }
+    //     return alpha;
+    // }
+
+    // int AlphaBetaMin(Board board, int alpha, int beta, int depth_left)
+    // {
+    //     if (depth_left == 0) return -Evaluate(board);
+    //     Move[] moves = board.GetLegalMoves();
+    //     foreach (Move move in moves)
+    //     {
+    //         board.MakeMove(move);
+    //         int score = AlphaBetaMax(board, alpha, beta, depth_left - 1);
+    //         board.UndoMove(move);
+    //         if (score <= alpha) return alpha;
+    //         if (score < beta) beta = score;
+    //     }
+    //     return beta;
+    // }
 
 }
